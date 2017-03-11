@@ -1,0 +1,33 @@
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+# Print the IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]; then
+  printf "My IP address is %s\n" "$_IP"
+fi
+
+
+cnt="0"
+while [ ! -f /dev/rfcomm1 ] && [ $cnt -le 10 ];
+do
+  rfcomm connect rfcomm1 66:35:56:78:90:AB 1 &
+  sleep 2
+  cnt=$(($cnt+1))
+done
+
+rfcomm connect rfcomm0 00:19:01:40:59:E1 2 &
+/etc/init.d/gpsd start
+python /home/pi/obd/myobd.py /home/pi/obd/ /dev/rfcomm1 > /home/pi/obd/myobd.log
+
+exit 0
